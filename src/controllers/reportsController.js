@@ -242,3 +242,55 @@ export const getDateRangeReport = async (req, res) => {
     });
   }
 };
+
+// ======================================
+// Sales Chart
+// GET /api/reports/sales-chart
+// ======================================
+
+export const getSalesChart = async (req, res) => {
+  try {
+    const chartData = await Order.aggregate([
+      {
+        $match: {
+          status: "Completed",
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: "%Y-%m-%d",
+              date: "$createdAt",
+            },
+          },
+          sales: {
+            $sum: "$totalAmount",
+          },
+        },
+      },
+      {
+        $sort: {
+          _id: 1,
+        },
+      },
+    ]);
+
+    const data = chartData.map((item) => ({
+      date: item._id,
+      sales: item.sales,
+    }));
+
+    res.status(200).json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to load sales chart.",
+    });
+  }
+};

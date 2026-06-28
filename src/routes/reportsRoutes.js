@@ -8,6 +8,7 @@ import {
   getTopProducts,
   getPaymentMethods,
   getDateRangeReport,
+  getSalesChart,
 } from "../controllers/reportsController.js";
 
 const router = express.Router();
@@ -20,11 +21,9 @@ router.use(roleMiddleware("Admin"));
 
 // Routes
 router.get("/summary", getSalesSummary);
-
 router.get("/top-products", getTopProducts);
-
 router.get("/payment-methods", getPaymentMethods);
-
 router.get("/date-range", getDateRangeReport);
+router.get("/sales-chart", getSalesChart);
 
 export default router;

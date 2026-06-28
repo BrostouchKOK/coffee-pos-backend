@@ -4,7 +4,7 @@ import {
   createOrder,
   getOrders,
   getOrderById,
-  updateOrderStatus
+  updateOrderStatus,
 } from "../controllers/orderController.js";
 
 import authMiddleware from "../middleware/authMiddleware.js";
@@ -20,7 +20,7 @@ router.get("/", authMiddleware, getOrders);
 // Get Single Order
 router.get("/:id", authMiddleware, getOrderById);
 
-router.put("/:id/status", updateOrderStatus);
+router.put("/:id/status", authMiddleware, updateOrderStatus);
 
 // Update status
 export default router;

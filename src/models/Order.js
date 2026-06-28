@@ -70,7 +70,7 @@ const orderSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["Completed", "Cancelled"],
+      enum: ["Completed", "Cancelled","Pending"],
       default: "Completed",
     },
   },
