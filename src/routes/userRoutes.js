@@ -8,7 +8,8 @@ import {
   updateUser,
   deleteUser,
   getProfile,
-  updateProfile
+  updateProfile,
+  changePassword
 } from "../controllers/userController.js";
 
 const router = express.Router();
@@ -25,6 +26,7 @@ router.use(authMiddleware);
 
 router.get("/profile", getProfile);
 router.put("/profile", updateProfile);
+router.put("/change-password", changePassword);
 
 // ======================================
 // Admin Only
