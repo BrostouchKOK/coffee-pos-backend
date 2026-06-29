@@ -10,6 +10,7 @@ import orderRoutes from "./routes/orderRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import reportsRoutes from "./routes/reportsRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import settingsRoutes from "./routes/settingsRoutes.js";
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/reports", reportsRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/settings", settingsRoutes);
 
 // Error Middleware
 app.use(errorMiddleware);
