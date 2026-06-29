@@ -56,7 +56,7 @@ export const updateSettings = async (req, res) => {
 
     // Update logo if uploaded
     if (req.file) {
-      settings.logo = `/uploads/${req.file.filename}`;
+      settings.logo = `/uploads/products/${req.file.filename}`;
     }
 
     await settings.save();
