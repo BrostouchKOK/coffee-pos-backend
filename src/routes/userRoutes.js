@@ -7,42 +7,53 @@ import {
   createUser,
   updateUser,
   deleteUser,
+  getProfile,
+  updateProfile
 } from "../controllers/userController.js";
 
 const router = express.Router();
 
 // ======================================
-// All User APIs require Login
+// Login Required
 // ======================================
+
 router.use(authMiddleware);
+
+// ======================================
+// Profile (Admin + Cashier)
+// ======================================
+
+router.get("/profile", getProfile);
+router.put("/profile", updateProfile);
 
 // ======================================
 // Admin Only
 // ======================================
+
 router.use(roleMiddleware("Admin"));
 
 // ======================================
 // Get All Users
-// GET /api/users
 // ======================================
+
 router.get("/", getUsers);
 
 // ======================================
 // Create User
-// POST /api/users
 // ======================================
+
 router.post("/", createUser);
 
 // ======================================
 // Update User
-// PUT /api/users/:id
 // ======================================
+
 router.put("/:id", updateUser);
 
 // ======================================
 // Delete User
-// DELETE /api/users/:id
 // ======================================
+
 router.delete("/:id", deleteUser);
 
 export default router;
