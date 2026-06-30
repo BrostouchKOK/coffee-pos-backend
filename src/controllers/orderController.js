@@ -3,6 +3,24 @@ import Order from "../models/Order.js";
 import Product from "../models/Product.js";
 
 // ======================================
+// Generate Order Number
+// ======================================
+
+const generateOrderNumber = () => {
+  const date = new Date();
+
+  const year = date.getFullYear();
+
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+
+  const day = String(date.getDate()).padStart(2, "0");
+
+  const random = Math.floor(1000 + Math.random() * 9000);
+
+  return `ORD-${year}${month}${day}-${random}`;
+};
+
+// ======================================
 // Create Order (Checkout)
 // ======================================
 
@@ -12,11 +30,19 @@ export const createOrder = async (req, res) => {
   try {
     session.startTransaction();
 
-    const { customerName, items, paymentMethod } = req.body;
+    const {
+      customerName,
+      items,
+      paymentMethod,
+      discountPercent = 0,
+      tax = 0,
+    } = req.body;
 
-    // Check cart
+    // Check Cart
+
     if (!items || items.length === 0) {
       await session.abortTransaction();
+
       session.endSession();
 
       return res.status(400).json({
@@ -28,15 +54,18 @@ export const createOrder = async (req, res) => {
 
     let orderItems = [];
 
-    let totalAmount = 0;
+    let subtotal = 0;
 
-    // Loop products
+    // ===============================
+    // Check Products + Stock
+    // ===============================
 
     for (const item of items) {
       const product = await Product.findById(item.product).session(session);
 
       if (!product) {
         await session.abortTransaction();
+
         session.endSession();
 
         return res.status(404).json({
@@ -46,10 +75,11 @@ export const createOrder = async (req, res) => {
         });
       }
 
-      // Check stock
+      // Stock Check
 
       if (product.stock < item.quantity) {
         await session.abortTransaction();
+
         session.endSession();
 
         return res.status(400).json({
@@ -59,7 +89,7 @@ export const createOrder = async (req, res) => {
         });
       }
 
-      const subtotal = product.price * item.quantity;
+      const itemSubtotal = product.price * item.quantity;
 
       orderItems.push({
         product: product._id,
@@ -70,12 +100,12 @@ export const createOrder = async (req, res) => {
 
         quantity: item.quantity,
 
-        subtotal,
+        subtotal: itemSubtotal,
       });
 
-      totalAmount += subtotal;
+      subtotal += itemSubtotal;
 
-      // Reduce Stock
+      // Reduce stock
 
       product.stock -= item.quantity;
 
@@ -84,20 +114,39 @@ export const createOrder = async (req, res) => {
       });
     }
 
+    // ===============================
+    // Calculate Receipt
+    // ===============================
+
+    const discountAmount = subtotal * (Number(discountPercent) / 100);
+    const afterDiscount = subtotal - discountAmount;
+    const taxAmount = afterDiscount * (Number(tax) / 100);
+    const totalAmount = afterDiscount + taxAmount;
+
+    // ===============================
     // Create Order
+    // ===============================
 
     const [order] = await Order.create(
       [
         {
+          orderNumber: generateOrderNumber(),
+
           customerName: customerName || "Walk-in Customer",
 
-          cashier: req.user.id,
+          cashier: req.user?._id || null,
 
           items: orderItems,
 
+          subtotal,
+
+          discount: discountAmount,
+
+          taxAmount,
+
           totalAmount,
 
-          paymentMethod,
+          paymentMethod: paymentMethod || "Cash",
 
           status: "Completed",
         },
@@ -107,8 +156,6 @@ export const createOrder = async (req, res) => {
         session,
       },
     );
-
-    // Finish transaction
 
     await session.commitTransaction();
 
@@ -155,8 +202,6 @@ export const getOrders = async (req, res) => {
 
     const query = {};
 
-    // Search customer
-
     if (search) {
       query.customerName = {
         $regex: search,
@@ -164,8 +209,6 @@ export const getOrders = async (req, res) => {
         $options: "i",
       };
     }
-
-    // Filter status
 
     if (status) {
       query.status = status;
@@ -175,11 +218,7 @@ export const getOrders = async (req, res) => {
 
     const orders = await Order.find(query)
 
-      .populate(
-        "cashier",
-
-        "username email",
-      )
+      .populate("cashier", "username email")
 
       .sort({
         createdAt: -1,
@@ -259,10 +298,10 @@ export const updateOrderStatus = async (req, res) => {
 
     const allowedStatus = ["Pending", "Completed", "Cancelled"];
 
-    // Check status value
     if (!allowedStatus.includes(status)) {
       return res.status(400).json({
         success: false,
+
         message: "Invalid order status",
       });
     }
@@ -272,6 +311,7 @@ export const updateOrderStatus = async (req, res) => {
     if (!order) {
       return res.status(404).json({
         success: false,
+
         message: "Order not found",
       });
     }

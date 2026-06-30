@@ -42,8 +42,16 @@ export const updateSettings = async (req, res) => {
       settings = await Settings.create({});
     }
 
-    const { cafeName, address, phone, email, currency, tax, receiptFooter } =
-      req.body;
+    const {
+      cafeName,
+      address,
+      phone,
+      email,
+      currency,
+      exchangeRate,
+      tax,
+      receiptFooter,
+    } = req.body;
 
     // Update text fields
     settings.cafeName = cafeName;
@@ -51,7 +59,11 @@ export const updateSettings = async (req, res) => {
     settings.phone = phone;
     settings.email = email;
     settings.currency = currency;
-    settings.tax = tax;
+
+    // Convert numbers
+    settings.exchangeRate = Number(exchangeRate);
+    settings.tax = Number(tax);
+
     settings.receiptFooter = receiptFooter;
 
     // Update logo if uploaded
