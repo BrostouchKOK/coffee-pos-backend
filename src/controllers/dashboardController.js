@@ -189,3 +189,29 @@ export const getDashboardStats = async (req, res) => {
     });
   }
 };
+
+// ======================================
+// GET Low Stock Products
+// ======================================
+
+export const getLowStockProducts = async (req, res) => {
+  try {
+    const products = await Product.find({
+      stock: { $lte: 5 },
+    })
+      .select("name stock image")
+      .sort({ stock: 1 });
+
+    res.status(200).json({
+      success: true,
+      data: products,
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to load low stock products.",
+    });
+  }
+};
